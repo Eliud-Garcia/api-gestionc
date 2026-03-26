@@ -76,5 +76,29 @@ def obtener_facturas_y_sus_vehiculos():
             ?facturaURI :id_factura ?idFactura .
         }}
         
+        
+    """
+    return ejecutar_sparql(query)
+
+"""
+Obtiene todos los servicios (descripciones de factura) realizados a un vehículo específico buscando por su placa.
+"""
+@router.get("/vehiculos/{placa}/servicios", response_model=List[Dict[str, Any]])
+def obtener_servicios_por_placa(placa: str):
+    query = f"""
+        {SPARQL_PREFIXES}
+        SELECT ?idFactura ?descripcionServicio
+        WHERE {{
+            ?vehiculoURI rdf:type :vehiculo .
+            ?vehiculoURI :placa ?placaStr .
+            
+            FILTER(str(?placaStr) = "{placa}")
+            
+            ?facturaURI rdf:type :factura .
+            ?facturaURI :detallaUnServicioEn ?vehiculoURI .
+            
+            ?facturaURI :descripcion ?descripcionServicio .
+            ?facturaURI :id_factura ?idFactura .
+        }}
     """
     return ejecutar_sparql(query)

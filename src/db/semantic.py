@@ -1,26 +1,23 @@
 from rdflib import Graph
-import os
+from rdflib.plugins.stores.sparqlstore import SPARQLStore
+from src.core.config import settings
 
-# Ruta donde el usuario debe colocar su archivo .ttl de Protegé
-ONTOLOGY_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "ontologia.ttl")
+# Obtenemos la URL de Fuseki desde settings
+FUSEKI_ENDPOINT_URL = settings.FUSEKI_ENDPOINT_URL
 
 # Variable global para mantener la gráfica en memoria
 _graph = None
 
 def get_semantic_graph() -> Graph:
     """
-    Carga la ontología .ttl en memoria solo la primera vez que se llama,
-    luego retorna el objeto Graph ya cargado para hacer consultas SPARQL.
+    Conecta a un endpoint remoto SPARQL solo la primera vez que se llama,
+    luego retorna el objeto Graph configurado para hacer consultas.
     """
     global _graph
     if _graph is None:
-        _graph = Graph()
-        if os.path.exists(ONTOLOGY_PATH):
-            print(f"Cargando ontología desde {ONTOLOGY_PATH}...")
-            _graph.parse(ONTOLOGY_PATH, format="turtle")
-            print("Ontología cargada exitosamente.")
-        else:
-            print(f"Advertencia: No se encontró el archivo {ONTOLOGY_PATH}")
+        print(f"Conectando a Apache Jena Fuseki en: {FUSEKI_ENDPOINT_URL}...")
+        store = SPARQLStore(query_endpoint=FUSEKI_ENDPOINT_URL)
+        _graph = Graph(store=store)
     return _graph
 
 def ejecutar_sparql(query: str):
