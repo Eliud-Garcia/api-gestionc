@@ -22,3 +22,7 @@ def obtener_usuario_por_documento(documento_identidad: int, db: Session = Depend
 @router.put('/{documento_identidad}', response_model=usuario_schema.UsuarioResponse)
 def actualizar_usuario(documento_identidad: int, usuario: usuario_schema.UsuarioUpdate, db: Session = Depends(get_db)):
     return usuario_service.actualizar_usuario(documento_identidad, usuario, db)
+
+@router.get('/{documento_identidad}/vehiculos')
+def obtener_vehiculos_de_un_usuario(documento_identidad: int, db: Session = Depends(get_db)):
+    return usuario_service.obtener_vehiculos_de_un_usuario(documento_identidad, db)

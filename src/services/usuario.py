@@ -35,9 +35,6 @@ def obtener_usuario_por_correo(correo: str, db: Session):
     return usuario
 
 
-
-
-
 def actualizar_usuario(documento_identidad: int, usuario: UsuarioUpdate, db: Session):
     usuario_existente = usuario_crud.obtener_usuario_por_documento(documento_identidad, db)
     if not usuario_existente:
@@ -46,6 +43,7 @@ def actualizar_usuario(documento_identidad: int, usuario: UsuarioUpdate, db: Ses
     if correo_usado and correo_usado["documento_identidad"] != documento_identidad:
         raise HTTPException(status_code=400, detail="El correo ya está en uso")
     return usuario_crud.actualizar_usuario(documento_identidad, usuario, db)
+
 
 def obtener_vehiculos_de_un_usuario(documento_identidad: int, db: Session):
     usuario = usuario_crud.obtener_usuario_por_documento(documento_identidad, db)

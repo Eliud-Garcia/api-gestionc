@@ -6,12 +6,27 @@ from src.schemas.usuario import UsuarioCreate, UsuarioUpdate
 #insertar nuevo usuario en la base de datos
 def registrar_usuario(db: Session, usuario: UsuarioCreate):
     rol_default = "usuario"
-    
+
     query = text(
         """
-        INSERT INTO usuarios 
-        (documento_identidad, nombres, apellidos, correo, fecha_nacimiento, rol, fecha_registro, contrasena) 
-        VALUES (:documento_identidad, :nombres, :apellidos, :correo, :fecha_nacimiento, :rol_default, CURRENT_DATE, :contrasena)
+        INSERT INTO usuarios (
+            documento_identidad, 
+            nombres, 
+            apellidos, 
+            correo, 
+            fecha_nacimiento, 
+            rol, 
+            fecha_registro, 
+            contrasena
+        ) VALUES (
+            :documento_identidad,
+            :nombres,
+            :apellidos,
+            :correo,
+            :fecha_nacimiento,
+            :rol_default,
+            CURRENT_DATE,
+            :contrasena)
         RETURNING *
         """)
     
@@ -42,6 +57,7 @@ def obtener_usuario_por_documento(documento_identidad: int, db: Session):
     resultado = db.execute(query, {"doc_id": documento_identidad}).mappings().first()
     return dict(resultado) if resultado else None
 
+
 def obtener_usuario_por_correo(correo: str, db: Session):
     query = text("SELECT * FROM usuarios WHERE correo = :correo_usuario LIMIT 1")
     resultado = db.execute(query, {"correo_usuario": correo}).mappings().first()
@@ -50,9 +66,12 @@ def obtener_usuario_por_correo(correo: str, db: Session):
 
 
 def actualizar_usuario(documento_identidad: int, usuario: UsuarioUpdate, db: Session):
-    query = text(
-        """UPDATE usuarios 
-        SET nombres = :nombres, apellidos = :apellidos, correo = :correo, fecha_nacimiento = :fecha_nacimiento
+    query = text("""
+        UPDATE usuarios 
+        SET nombres = :nombres, 
+        apellidos = :apellidos, 
+        correo = :correo, 
+        fecha_nacimiento = :fecha_nacimiento
         WHERE documento_identidad = :documento_identidad
         RETURNING *""")
     
@@ -69,7 +88,16 @@ def actualizar_usuario(documento_identidad: int, usuario: UsuarioUpdate, db: Ses
 
 
 def obtener_vehiculos_de_un_usuario(documento_identidad: int, db: Session):
-    query = text("SELECT * FROM vehiculos WHERE documento_identidad = :doc_id")
+    query = text("""
+        SELECT  
+            v.placa, 
+            v.marca,
+            uv.fecha_registro
+        FROM usuario_vehiculo AS uv
+        INNER JOIN vehiculos AS v
+        ON uv.pfk_vehiculo = v.placa
+        WHERE uv.pfk_usuario = :doc_id
+    """)
     resultado = db.execute(query, {"doc_id": documento_identidad}).mappings().all()
     return [dict(row) for row in resultado]
     
