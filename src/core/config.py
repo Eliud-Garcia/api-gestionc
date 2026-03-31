@@ -6,6 +6,9 @@ class Settings(BaseSettings):
     PROJECT_DESCRIPTION:str = "API para la gestión de vehiculos"
     DATABASE_URL:str
     FUSEKI_ENDPOINT_URL:str
+    SECRET_KEY: str = "supersecretkey_cambiar_en_produccion"
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
     class Config:
         env_file = ".env"

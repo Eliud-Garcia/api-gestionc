@@ -3,6 +3,7 @@ from fastapi import HTTPException
 from src.crud import usuario as usuario_crud
 from src.schemas.usuario import UsuarioCreate
 from src.schemas.usuario import UsuarioUpdate
+from src.core.security import get_password_hash
 
 ##para registrar un usuario
 def registrar_usuario(db: Session, usuario: UsuarioCreate):
@@ -12,6 +13,8 @@ def registrar_usuario(db: Session, usuario: UsuarioCreate):
         raise HTTPException(status_code=400, detail="El correo ya está en uso")
     if usuario_existente:
         raise HTTPException(status_code=400, detail="El usuario ya existe")
+    
+    usuario.contrasena = get_password_hash(usuario.contrasena)
     
     return usuario_crud.registrar_usuario(db, usuario)
 
