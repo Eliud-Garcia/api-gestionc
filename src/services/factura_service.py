@@ -1,6 +1,13 @@
 import re
+import os
+import tempfile
+from sqlalchemy.orm import Session
+from datetime import datetime
 from PyPDF2 import PdfReader
 from src.services.groq_service import valid_products
+from src.crud.factura import insert_factura
+from src.schemas.factura import FacturaCreate
+from src.services.supabase_service import upload_factura_pdf
 
 def get_cufe_code(text: str) -> str:
     m_cufe = re.search(r"Código Único de Factura - CUFE[\s:]+([0-9a-fA-F]{90,100})", text)
@@ -113,5 +120,54 @@ def get_all(pdf_path):
 def get_products_from_pdf(pdf_path: str) -> list:
     data = get_all(pdf_path)
     valid_list = valid_products(data[4])
-    print(valid_list)
+    #print(valid_list)
     return valid_list
+
+
+#guardar factura
+def save_factura(db: Session, file_bytes: bytes, filename: str, placa: str):
+    # Escribir a un archivo temporal para que get_all y PyPDF2 interactúen
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+        tmp.write(file_bytes)
+        tmp_path = tmp.name
+        
+    try:
+        # Extraer toda la información base
+        cufe_code, date, nit, total, products = get_all(tmp_path)
+    finally:
+        os.remove(tmp_path)
+    
+    valid_list = valid_products(products)
+    
+    # Subir factura a supabase
+    url_pdf_uploaded = upload_factura_pdf(file_bytes, cufe_code + ".pdf")
+    
+    # Ajustar coste si es válido y evitar errores del string 'not found'
+    costo_parseado = total.replace(',', '.') if isinstance(total, str) and total != "not found" else "0.0"
+    
+    try:
+        # Convertir "DD/MM/YYYY" a objeto datetime.date para Pydantic
+        fecha_parseada = datetime.strptime(date, "%d/%m/%Y").date()
+    except Exception:
+        fecha_parseada = None # Si es "not found" u otro formato
+    
+    # guardar la factura en la base de datos
+    factura_data = FacturaCreate(
+        id_factura=cufe_code,
+        fecha_factura=fecha_parseada,
+        nit_empresa=nit,
+        costo_total=float(costo_parseado),
+        fk_placa=placa,
+        url_pdf=url_pdf_uploaded
+    )
+
+    saved_factura = insert_factura(db, factura_data)
+    
+    return {
+        "id_factura": saved_factura.id_factura,
+        "fecha_factura": saved_factura.fecha_factura,
+        "nit_empresa": saved_factura.nit_empresa,
+        "costo_total": saved_factura.costo_total,
+        "url_pdf": saved_factura.url_pdf,
+        "productos_validos": valid_list
+    }

@@ -12,7 +12,7 @@ app = FastAPI(
 app.include_router(auth.router, prefix='/api/auth', tags=['Autenticación'])
 app.include_router(usuario.router, prefix='/api/usuarios', tags=['Usuarios'])
 app.include_router(semantic.router, prefix='/api/semantica', tags=['Ontología Semántica'])
-
+app.include_router(factura.router, prefix='/api/facturas', tags=['Facturas'])
 
 
 # para iniciar el servidor
