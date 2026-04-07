@@ -1,8 +1,11 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
+#crud
 from src.crud import usuario as usuario_crud
 from src.schemas.usuario import UsuarioCreate
-from src.schemas.usuario import UsuarioUpdate
+#schemas
+from src.schemas.usuario import UsuarioUpdate, UsuarioRegisterResponse
+#core
 from src.core.security import get_password_hash
 
 ##para registrar un usuario
@@ -15,8 +18,18 @@ def registrar_usuario(db: Session, usuario: UsuarioCreate):
         raise HTTPException(status_code=400, detail="El usuario ya existe")
     
     usuario.contrasena = get_password_hash(usuario.contrasena)
-    
-    return usuario_crud.registrar_usuario(db, usuario)
+
+    data = usuario_crud.registrar_usuario(db, usuario)
+
+    response = UsuarioRegisterResponse(
+        nombres=data["nombres"],
+        apellidos=data["apellidos"],
+        correo=data["correo"],
+        fecha_nacimiento=data["fecha_nacimiento"],
+        documento_identidad=data["documento_identidad"],
+        fecha_registro=data["fecha_registro"]
+    )
+    return response
 
 
 

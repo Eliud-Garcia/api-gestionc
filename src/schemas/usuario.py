@@ -2,18 +2,23 @@ from pydantic import BaseModel, Field, ConfigDict
 from datetime import date
 from typing import Optional
 
-# DTO: Propiedades compartidas
-class UsuarioBase(BaseModel):
+#para crear un usuario
+class UsuarioCreate(BaseModel):
     nombres: str
     apellidos: str
-    correo: str # Tip: Si instalas el paquete 'email-validator', puedes usar EmailStr aquí para validar el formato
+    correo: str
     fecha_nacimiento: date
-
-# DTO: Para crear un nuevo usuario (Se pide todo lo de 'UsuarioBase' más el documento que es la Primary Key)
-class UsuarioCreate(UsuarioBase):
     documento_identidad: int
     contrasena: str
 
+#para retornar en el registro
+class UsuarioRegisterResponse(BaseModel):
+    nombres: str
+    apellidos: str
+    correo: str
+    fecha_nacimiento: date
+    documento_identidad: int
+    fecha_registro: date
 
 #para el login
 class UsuarioLogin(BaseModel):
@@ -28,19 +33,22 @@ class UsuarioLoginResponse(BaseModel):
     correo: str
     documento_identidad: int
 
-# DTO: Para actualizar un usuario (Todos los campos son opcionales porque podrías querer actualizar solo uno)
-class UsuarioUpdate(UsuarioBase):
+#para actualizar un usuario
+class UsuarioUpdate(BaseModel):
     nombres: Optional[str] = None
     apellidos: Optional[str] = None
     correo: Optional[str] = None
     fecha_nacimiento: Optional[date] = None
 
-# DTO: Para devolver la respuesta al cliente (Incluye todo, incluso lo generado por el sistema)
-class UsuarioResponse(UsuarioBase):
+#para devolver la respuesta al cliente
+class UsuarioResponse(BaseModel):
+    nombres: str
+    apellidos: str
+    correo: str
+    fecha_nacimiento: date
     documento_identidad: int
     fecha_registro: date
 
-    # Configuración de Pydantic V2 para que pueda leer objetos de SQLAlchemy
     model_config = ConfigDict(from_attributes=True)
 
 
