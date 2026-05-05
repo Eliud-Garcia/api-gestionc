@@ -39,3 +39,11 @@ def insert_factura(db: psycopg2.extensions.connection, factura: FacturaCreate):
         fk_placa=factura.fk_placa,
         url_pdf=factura.url_pdf
     )
+
+def find_by_cufe(db: psycopg2.extensions.connection, cufe: str):
+    query = """
+        SELECT * FROM facturas WHERE id_factura = %s
+    """
+    with db.cursor() as cursor:
+        cursor.execute(query, (cufe,))
+        return cursor.fetchone()

@@ -31,6 +31,6 @@ def valid_product(product) -> str:
 def valid_products(products : list) -> list:
     valid_items = []
     for p in products:
-        if valid_product(p["producto"]) == "si":
+        if valid_product(p["descripcion"]) == "si":
             valid_items.append(p)
     return valid_items
