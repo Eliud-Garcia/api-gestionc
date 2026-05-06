@@ -7,10 +7,16 @@ from datetime import datetime
 from fastapi import HTTPException, UploadFile
 import psycopg2
 
-from src.services import groq_service
+# cruds
 from src.crud import factura as factura_crud
+from src.crud import servicio as servicio_crud
+from src.crud import vehiculo as vehiculo_crud
+# schemas
 from src.schemas.factura import FacturaCreate
+from src.schemas.servicio import ServicioCreate
+#services
 from src.services import supabase_service
+from src.services import groq_service
 
 
 def limpiar_valor(valor: str) -> Decimal:
@@ -174,6 +180,9 @@ async def save_factura(db: psycopg2.extensions.connection, file: UploadFile, pla
     if not filename.endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Solamente se permiten archivos PDF.")
     
+    if not vehiculo_crud.get_by_placa(db, placa):
+        raise HTTPException(status_code=404, detail="El vehiculo no existe")
+    
     file_bytes = await file.read()
     
     try:
@@ -195,17 +204,20 @@ async def save_factura(db: psycopg2.extensions.connection, file: UploadFile, pla
     
         #Buscar si la factura ya existe
         if factura_crud.find_by_cufe(db, cufe_code):
-            raise HTTPException(status_code=400, detail="La factura ya existe")
+            raise HTTPException(status_code=400, detail="La factura ya fue registrada en otro vehiculo")
     
         #filtrar los productos validos
         valid_list = groq_service.valid_products(products)
+
+
     
         total = Decimal("0.0")
         for producto in valid_list:
             total += producto["precio_unitario_venta"]
             total += producto["iva_valor"]
             total += producto["inc_valor"]
-    
+
+        
         # Subir factura a supabase
         url_pdf_uploaded = supabase_service.upload_factura_pdf(file_bytes, cufe_code + ".pdf")
         
@@ -224,8 +236,19 @@ async def save_factura(db: psycopg2.extensions.connection, file: UploadFile, pla
             fk_placa=placa,
             url_pdf=url_pdf_uploaded
         )
-    
+
+        #guardar factura
         saved_factura = factura_crud.insert_factura(db, factura_data)
+
+        #guardar servicios asociados a la factura
+        for producto in valid_list:
+            servicio = ServicioCreate(
+                nombre=producto["descripcion"],
+                costo=producto["precio_unitario_venta"],
+                cantidad=limpiar_valor(producto["cantidad"]),
+                fk_idfactura=cufe_code,
+            )
+            servicio_crud.insert_servicio(db, servicio)
         
         return {
             "id_factura": saved_factura.id_factura,
