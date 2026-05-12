@@ -1,0 +1,17 @@
+
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - PORT=8000
+      - FUSEKI_ENDPOINT_URL=http://localhost:3030/vehiculo/query
+    volumes:
+      - fuseki-data:/fuseki-data
+    restart: unless-stopped
+
+volumes:
+  fuseki-data:
