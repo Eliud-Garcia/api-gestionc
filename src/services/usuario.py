@@ -132,3 +132,10 @@ def eliminar_vehiculo_usuario(documento_identidad: int, placa: str, db: psycopg2
         raise HTTPException(status_code=404, detail="El vehículo no pertenece al usuario o ya se encuentra inactivo")
         
     return {"status": "success", "message": "Vehículo eliminado correctamente (dado de baja lógica)"}
+
+
+def obtener_historial_vehiculos(documento_identidad: int, db: psycopg2.extensions.connection):
+    usuario = usuario_crud.obtener_usuario_por_documento(documento_identidad, db)
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    return usuario_crud.obtener_historial_vehiculos(documento_identidad, db)

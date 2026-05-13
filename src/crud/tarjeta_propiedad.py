@@ -17,6 +17,22 @@ def insert_tarjeta_propiedad(db: psycopg2.extensions.connection, tarjeta: Tarjet
         %(marca)s, %(clase_vehiculo)s, %(modelo)s, %(capacidad)s, %(servicio)s, %(tipo_carroceria)s, 
         %(linea_vehiculo)s, %(numero_motor)s, %(combustible)s, %(color)s, %(placa)s, %(fk_placavehiculo)s
     )
+    ON CONFLICT (numero_tarjeta) DO UPDATE SET
+        nombre_propietario = EXCLUDED.nombre_propietario,
+        documento_propietario = EXCLUDED.documento_propietario,
+        cilindraje = EXCLUDED.cilindraje,
+        marca = EXCLUDED.marca,
+        clase_vehiculo = EXCLUDED.clase_vehiculo,
+        modelo = EXCLUDED.modelo,
+        capacidad = EXCLUDED.capacidad,
+        servicio = EXCLUDED.servicio,
+        tipo_carroceria = EXCLUDED.tipo_carroceria,
+        linea_vehiculo = EXCLUDED.linea_vehiculo,
+        numero_motor = EXCLUDED.numero_motor,
+        combustible = EXCLUDED.combustible,
+        color = EXCLUDED.color,
+        placa = EXCLUDED.placa,
+        fk_placavehiculo = EXCLUDED.fk_placavehiculo
     """
 
     data = tarjeta.model_dump()

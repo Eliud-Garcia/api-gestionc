@@ -37,6 +37,16 @@ def obtener_vehiculos_de_un_usuario(
     return usuario_service.obtener_vehiculos_de_un_usuario(documento_identidad, db)
 
 
+@router.get('/{documento_identidad}/vehiculos/historial')
+def obtener_historial_vehiculos(
+    documento_identidad: int,
+    db: psycopg2.extensions.connection = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Obtiene el historial completo de vehículos de un usuario, incluyendo los abandonados"""
+    return usuario_service.obtener_historial_vehiculos(documento_identidad, db)
+
+
 from src.schemas import vehiculo as vehiculo_schema
 
 @router.post('/{documento_identidad}/vehiculos')

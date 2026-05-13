@@ -24,6 +24,10 @@ def asignar_vehiculo_a_usuario(db: psycopg2.extensions.connection, documento_ide
     INSERT INTO usuario_vehiculo 
     (pfk_usuario, pfk_vehiculo, estado, kilometros_registro)
     VALUES (%(usuario)s, %(vehiculo)s, 'Activo', %(kilometros)s)
+    ON CONFLICT (pfk_usuario, pfk_vehiculo) DO UPDATE SET
+        estado = 'Activo',
+        kilometros_registro = EXCLUDED.kilometros_registro,
+        fecha_registro = CURRENT_DATE
     """
     
     with db.cursor() as cursor:

@@ -99,7 +99,32 @@ def obtener_vehiculos_de_un_usuario(documento_identidad: int, db: psycopg2.exten
         FROM usuario_vehiculo AS uv
         INNER JOIN vehiculos AS v
         ON uv.pfk_vehiculo = v.placa
+        WHERE uv.pfk_usuario = %(doc_id)s AND uv.estado = 'Activo';
+    """
+    with db.cursor() as cursor:
+        cursor.execute(query, {"doc_id": documento_identidad})
+        resultado = cursor.fetchall()
+        return [dict(row) for row in resultado]
+
+
+def obtener_historial_vehiculos(documento_identidad: int, db: psycopg2.extensions.connection):
+    """
+    Obtiene el historial completo de vehículos de un usuario,
+    incluyendo los que ya no le pertenecen (estado Inactivo).
+    """
+    query = """
+        SELECT  
+            v.placa, 
+            v.marca,
+            v.cilindraje,
+            uv.estado,
+            uv.fecha_registro,
+            uv.kilometros_registro
+        FROM usuario_vehiculo AS uv
+        INNER JOIN vehiculos AS v
+        ON uv.pfk_vehiculo = v.placa
         WHERE uv.pfk_usuario = %(doc_id)s
+        ORDER BY uv.fecha_registro DESC;
     """
     with db.cursor() as cursor:
         cursor.execute(query, {"doc_id": documento_identidad})
