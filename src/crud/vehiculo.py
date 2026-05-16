@@ -8,7 +8,23 @@ def get_by_placa(db: psycopg2.extensions.connection, placa: str):
     Busca un vehículo en la base de datos a partir de su placa.
     Retorna un diccionario con los datos del vehículo si existe, o None si no se encuentra.
     """
-    query = "SELECT * FROM vehiculos WHERE placa = %(placa)s"
+    query = """
+        SELECT 
+            v.placa,
+            v.cilindraje,
+            v.marca,
+            t.clase_vehiculo,
+            t.modelo,
+            t.capacidad,
+            t.servicio,
+            t.tipo_carroceria,
+            t.linea_vehiculo,
+            t.combustible,
+            t.color
+        FROM vehiculos v
+        LEFT JOIN tarjetapropiedad t ON v.placa = t.fk_placavehiculo
+        WHERE v.placa = %(placa)s
+    """
     
     with db.cursor() as cursor:
         cursor.execute(query, {"placa": placa})

@@ -11,6 +11,7 @@ import psycopg2
 from src.crud import factura as factura_crud
 from src.crud import servicio as servicio_crud
 from src.crud import vehiculo as vehiculo_crud
+from src.crud import usuario as usuario_crud
 # schemas
 from src.schemas.factura import FacturaCreate
 from src.schemas.servicio import ServicioCreate
@@ -264,3 +265,56 @@ async def save_factura(db: psycopg2.extensions.connection, file: UploadFile, pla
     except Exception as e:
         # Capturar cualquier otro error y lanzar un 500
         raise HTTPException(status_code=500, detail=f"Error interno procesando factura: {str(e)}")
+
+
+def obtener_vehiculos_con_facturas_usuario(db: psycopg2.extensions.connection, documento: int):
+    """
+    Obtiene todos los vehículos activos de un usuario y, por cada vehículo,
+    realiza consultas individuales para obtener sus facturas y los servicios de cada factura,
+    unificándolo en un JSON.
+    """
+    # 1. Obtener todos los vehículos activos del usuario
+    vehiculos = usuario_crud.obtener_vehiculos_de_un_usuario(documento, db)
+    
+    resultados = []
+    
+    # 2. Iterar por cada vehículo para obtener sus facturas y servicios
+    for v in vehiculos:
+        vehiculo_completo = vehiculo_crud.get_by_placa(db, v["placa"]) or {}
+        
+        vehiculo_data = {
+            "placa": v["placa"],
+            "marca": v["marca"],
+            "modelo": vehiculo_completo.get("modelo", ""),
+            "color": vehiculo_completo.get("color", ""),
+            "combustible": vehiculo_completo.get("combustible", ""),
+            "clase_vehiculo": vehiculo_completo.get("clase_vehiculo", ""),
+            "facturas": []
+        }
+        
+        # Consultar facturas de este vehículo
+        facturas = factura_crud.find_by_placa(db, v["placa"])
+        
+        for f in facturas:
+            factura_data = {
+                "id_factura": f["id_factura"],
+                "fecha_factura": f["fecha_factura"].isoformat() if f["fecha_factura"] else None,
+                "nombre_empresa": f["nombre_empresa"],
+                "servicios": []
+            }
+            
+            # Consultar servicios de esta factura
+            servicios = servicio_crud.find_by_factura(db, f["id_factura"])
+            
+            for s in servicios:
+                factura_data["servicios"].append({
+                    "nombre": s["nombre"],
+                    "costo": s["costo"],
+                    "cantidad": s["cantidad"]
+                })
+                
+            vehiculo_data["facturas"].append(factura_data)
+            
+        resultados.append(vehiculo_data)
+        
+    return resultados

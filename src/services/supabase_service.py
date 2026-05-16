@@ -30,7 +30,6 @@ def delete_factura_pdf(url_factura: str):
     Extrae el path relativo desde la URL.
     """
     # Extraer el path del archivo desde la URL pública
-    # URL formato: https://xxx.supabase.co/storage/v1/object/public/bucket/facturas/archivo.pdf
     try:
         bucket_name = settings.SUPABASE_BUCKET
         # Buscar el path después del nombre del bucket en la URL

@@ -58,3 +58,45 @@ def valid_products(products: list) -> list:
             valid_indices.add(idx)
 
     return [products[i - 1] for i in sorted(valid_indices)]
+
+def chat(mensaje: str, servicios: list = None):
+    if servicios:
+        servicios_str_list = []
+        for v in servicios:
+            detalles = []
+            if v.get('modelo'): detalles.append(v['modelo'])
+            if v.get('color'): detalles.append(v['color'])
+            if v.get('combustible'): detalles.append(v['combustible'])
+            
+            extras = f", {', '.join(detalles)}" if detalles else ""
+            servicios_str_list.append(f"- Vehículo: {v['placa']} ({v['marca']}{extras}):")
+            for f in v['facturas']:
+                fecha = f['fecha_factura']
+                for s in f['servicios']:
+                    servicios_str_list.append(f"  * {fecha} - {s['nombre']} (Cantidad: {s['cantidad']})")
+        
+        servicios_str = "\n".join(servicios_str_list)
+        context_prompt = f"\n\nContexto: Historial de servicios de los vehículos del usuario:\n{servicios_str}"
+    else:
+        context_prompt = "\n\nContexto: El usuario actual no tiene servicios registrados en sus vehículos."
+
+    chat_completion = client.chat.completions.create(
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "Eres un asistente virtual experto que brinda recomendaciones "
+                    "a los usuarios basándote en los servicios que se le han realizado "
+                    "a sus vehículos. Debes ser amable, profesional y dar consejos útiles y precisos."
+                    f"{context_prompt}"
+                ),
+            },
+            {
+                "role": "user",
+                "content": mensaje,
+            },
+        ],
+        model="llama-3.3-70b-versatile",
+        temperature=0.7,
+    )
+    return chat_completion.choices[0].message.content

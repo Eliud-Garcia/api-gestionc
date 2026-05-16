@@ -144,3 +144,15 @@ def eliminar_factura(
         "message": "Factura eliminada correctamente",
         "id_factura": id_factura
     }
+
+
+@router.get("/test/vehiculos-facturas/{documento}")
+def test_vehiculos_con_facturas(
+    documento: int,
+    db: psycopg2.extensions.connection = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Endpoint para ver los vehículos con sus facturas y servicios.
+    """
+    return factura_service.obtener_vehiculos_con_facturas_usuario(db, documento)
